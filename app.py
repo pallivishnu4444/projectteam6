@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_restful import Api
-from resources.emp import Profile,Clubdelete,Clubnames,Login,Addclub,Forgotpassword,Adminlog,Allclubdetails,Changepassword,Requesttoclub,Addclubmembers
+from resources.emp import Profile,Clubdelete,Clubnames,Login,Adminlog,Requesttoclub,Clubmembers,Addclub,Forgotpassword,Allclubdetails,Changepassword,Addclubmembers
 from flask_jwt_extended import JWTManager
 
 app=Flask(__name__)
@@ -16,9 +16,11 @@ api.add_resource(Login,'/login')
 api.add_resource(Allclubdetails,'/allclub')
 api.add_resource(Addclubmembers,'/addclubmembers')
 api.add_resource(Changepassword,'/changepassword')
+api.add_resource(Forgotpassword,'/forgotpassword')
+api.add_resource(Clubmembers,'/clubmembers')
 api.add_resource(Requesttoclub,'/requesttoclub')
 api.add_resource(Adminlog,'/adminlog')
-api.add_resource(Forgotpassword,'/forgotpassword')
+
 @jwt.unauthorized_loader
 def missing_token_callback(error):
     return jsonify({
