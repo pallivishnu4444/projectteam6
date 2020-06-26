@@ -2,11 +2,12 @@ from flask_restful import Resource,reqparse
 from db import query
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import create_access_token,jwt_required
+from operator import itemgetter
 
 class Profile(Resource):
     def get(self):
         try:
-            return query(f"""SELECT * FROM profile """)
+            return query("""SELECT * FROM profile""")
         except:
             return {"message":"There was an error connecting to profile table."},500
 
@@ -39,6 +40,29 @@ class Profile(Resource):
         
         return {"message":"Successfully Inserted."},201
 
+class Displaypostevents(Resource):
+    def get(self):
+        parser=reqparse.RequestParser()
+        parser.add_argument('clubname',type=str,required=True,help="clubname cannot be left blank!")
+        data=parser.parse_args()
+        try:
+            return query(f"""select eventname from event where clubname='{data['clubname']}'""")
+        except:
+            return {"message":"Error in connecting to table"}
+
+    def post(self):
+        parser=reqparse.RequestParser()
+        parser.add_argument('clubname',type=str,required=True,help="clubname cannot be left blank!")
+        parser.add_argument('eventname',type=str,required=True,help="eventname cannot be left blank!")
+        parser.add_argument('eventdate',type=str,required=True,help="eventdate cannot be left blank!")
+        data=parser.parse_args()
+        try:
+            query(f"""insert into event values({data['clubname']},{data['eventname']},{data['eventdate']})""")
+        except:
+            query("Error in inserting into event table")
+        return {"message":"Successfully inserted"}
+
+
 class Requesttoclub(Resource):
     def get(self):
         parser=reqparse.RequestParser()
@@ -48,7 +72,7 @@ class Requesttoclub(Resource):
             return query(f"""select * from student where clubname='{data['clubname']}'""")
         except:
             return {"error in fetching details of student"}
-
+    @jwt_required
     def post(self):
         parser=reqparse.RequestParser()
         parser.add_argument('cid',type=int,required=False,help="id can be left blank!")
@@ -58,7 +82,7 @@ class Requesttoclub(Resource):
         parser.add_argument('acceptstatus',type=int,required=True,help="acceptstatus cannot be left blank!")
         data=parser.parse_args()
         try:
-            query(f"""update student set acceptstatus='{data['acceptstatus']}' where stuid={data['stuid']}""")
+            query(f"""update student set acceptstatus={data['acceptstatus']} where stuid={data['stuid']}""")
         except:
             return {"Accept status are not changed"}
         return {"Succesfully updated"}
@@ -80,6 +104,7 @@ class Changepassword(Resource):
 
 
 class Forgotpassword(Resource):
+    @jwt_required
     def post(self):
         parser=reqparse.RequestParser()
         parser.add_argument('username',type=str,required=True,help="username cannot be left blank!")
@@ -90,8 +115,6 @@ class Forgotpassword(Resource):
         except:
             return {"error in changing the password"}
         return {"password changed succefully"}
-
-
 
         
 class Addclub(Resource):
@@ -230,10 +253,10 @@ class User():
 class Login(Resource):
     def post(self):
         parser=reqparse.RequestParser()
-        parser.add_argument('username',type=str,required=True,help="username cannot be left blank!")
+        parser.add_argument('uid',type=str,required=True,help="user id cannot be left blank!")
         parser.add_argument('password',type=str,required=True,help="password cannot be left blank!")
         data=parser.parse_args()
-        user=User.getUserByUsername(data['username'])
+        user=User.getUserByUid(data['uid'])
         if user and safe_str_cmp(user.password,data['password']):
             access_token=create_access_token(identity=user.username,expires_delta=False)
             return {'access_token':access_token},200
