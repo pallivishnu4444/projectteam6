@@ -110,7 +110,7 @@ class Changepasswordstudent(Resource):
         parser.add_argument('password',type=str,required=True,help="password cannot be left blank!")
         data=parser.parse-args()
         try:
-            query(f"""update table admin set password='{data['password']}' where username='{data['username']}'""")
+            query(f"""update table studentlogin set password='{data['password']}' where stuid='{data['username']}'""")
         except:
             return {"message":"Updation of password is not successful"}
         return {"password updated successfully"}
