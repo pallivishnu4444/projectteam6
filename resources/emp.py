@@ -11,7 +11,6 @@ class Profile(Resource):
         except:
             return {"message":"There was an error connecting to profile table."},500
 
-    @jwt_required
     def post(self):
         parser=reqparse.RequestParser()
         parser.add_argument('stuid',type=int,required=True,help="student id cannot be left blank!")
@@ -35,6 +34,7 @@ class Profile(Resource):
                                                         '{data['hobbies']}',
                                                         '{data['phoenno']}',
                                                         '{data['emailid']}')""")
+            query(f"""insert into studentlogin values({data['stuid']},{data['stuid']},{data['emailid']})""")
         except:
             return {"message":"There was an error inserting into profile table."},500
         
@@ -101,6 +101,49 @@ class Changepassword(Resource):
         except:
             return {"message":"Updation of password is not successful"}
         return {"password updated successfully"}
+
+class Changepasswordstudent(Resource):
+    @jwt_required
+    def post(self):
+        parser=reqparse.RequestParser()
+        parser.add_argument('username',type=str,required=True,help="username cannot be left blank!")
+        parser.add_argument('password',type=str,required=True,help="password cannot be left blank!")
+        data=parser.parse-args()
+        try:
+            query(f"""update table admin set password='{data['password']}' where username='{data['username']}'""")
+        except:
+            return {"message":"Updation of password is not successful"}
+        return {"password updated successfully"}
+
+class Editprofile(Resource):
+    def post(self):
+        query("""select * from profile""")
+        parser=reqparse.RequestParser()
+        parser.add_argument('stuid',type=int,required=True,help="student id cannot be left blank!")
+        parser.add_argument('name',type=str,required=False,help="name cannot be left blank!")
+        parser.add_argument('branch',type=str,required=False,help="branch cannot be left blank!")
+        parser.add_argument('year',type=int,required=False,help="year cannot be left blank!")
+        parser.add_argument('grade',type=float,required=False,help="grade cannot be left blank!")
+        parser.add_argument('cactivities',type=str,required=False,help="cactivities cannot be left blank!")
+        parser.add_argument('hobbies',type=int,required=False,help="Hobbies cannot be left blank!")
+        parser.add_argument('phoneno',type=int,required=False,help="phonenp cannot be left blank!")
+        parser.add_argument('emailid',type=str,required=False,help="emailid cannot be left blank!")
+        data=parser.parse_args()
+        if({data['name']} != " "):
+            query(f"""update profile set name={data['name']} where stuid={data['stuid']}""")
+        if({data['year']}!=" "):
+            query(f"""update profile set year={data['year']} where stuid={data['stuid']}""")
+        if({data['grade']}!=" "):
+            query(f"""update  profile set grade='{data['grade']}' where stuid={data['stuid']}""")
+        if({data['phoneno']}!=" "):
+            query(f"""update  profile set phoneno={data['phoneno']} where stuid={data['stuid']}""")
+        if({data['emailid']}!=" "):
+            query(f"""update  profile set emailid={data['emailid']} where stuid={data['stuid']}""")
+        if({data['cactivities']}!=" "):
+            query(f"""update profile set cactivities={data['cactivities']} where stuid={data['stuid']}""")
+        else:
+            return {"message":"No updates made"}
+        return {"message":"updated succesfully"}
 
 
 class Forgotpassword(Resource):
@@ -183,13 +226,29 @@ class Allclubdetails(Resource):
             return {"Unable to insert in to student club table"}
         return {"Succefully inserted into student table"}
 
+class Studentlogin(Resource):
+    def post(self):
+        parser=reqparse.RequestParser()
+        parser.add_argument('username',type=str,required=True,help="username cannot be left blank!")
+        parser.add_argument('password',type=str,required=True,help="password cannot be left blank!")
+        data=parser.parse_args()
+        try:
+            user=User.getPasswordById(data['username'])
+            if user and safe_str_cmp(user.password,data['password']):
+                return {"message":"Login credentials are correct"}
+            else:
+                return {"message":"Invalid credentials"}
+        except:
+            {"message":"Unable to connect to studnet login table"}
+
+
 class Adminlog(Resource):
     def post(self):
         parser=reqparse.RequestParser()
         parser.add_argument('username',type=str,required=True,help="username cannot be left blank!")
         parser.add_argument('password',type=str,required=True,help="password cannot be left blank!")
         data=parser.parse_args()
-        user=User.getAdminByUsername(data['username'])
+        user=User.getPasswordById(data['username'])
         if user and safe_str_cmp(user.password,data['password']):
             access_token=create_access_token(identity=user.username,expires_delta=False)
             return {'access_token':access_token},200
@@ -247,6 +306,13 @@ class User():
     def getUserByUsername(cls,username):
         result=query(f"""SELECT username,password FROM superadmin WHERE username='{username}'""",return_json=False)
         if len(result)>0: return User(result[0]['username'],result[0]['password'])
+        return None
+
+
+    @classmethod
+    def getPasswordById(cls,username):
+        result=query(f"""SELECT stuid,password FROM studentlogin WHERE stuid='{username}'""",return_json=False)
+        if len(result)>0: return User(result[0]['stuid'],result[0]['password'])
         return None
 
 
