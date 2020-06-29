@@ -115,6 +115,26 @@ class Changepasswordstudent(Resource):
             return {"message":"Updation of password is not successful"}
         return {"password updated successfully"}
 
+class Mail(Resource):
+    @jwt_required
+    def get(self):
+        parser=reqparse.RequestParser()
+        parser.add_argument('userid',type=int,required=False,help="userid name cannot be left blank!")
+        parser.add_argument('username',type=str,required=False,help="username name cannot be left blank!")
+        data=parser.parse_args()
+        if data['userid'] is not None:
+            adminid = data['userid']
+            try:
+                return query(f"""select emailid from project.profile where stuid={adminid} """,return_json=False)
+            except:
+                return {"message":"No entry with the given studentid "},500
+        else:
+            username = data['username']
+            try:
+                return query(f"""select emailid from project.profile  where name='{username}' """,return_json=False)
+            except:
+                return {"message":"No entry with the given studentid "},500
+
 class Editprofile(Resource):
     def post(self):
         query("""select * from profile""")
